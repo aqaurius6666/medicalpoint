@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.service.name }}-deployment
+  labels:
+    chart: {{ .Values.service.name }}
+
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: "{{ .Values.service.name }}-selector"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.service.name }}-selector"
+    spec:
+      volumes:
+      - name: firebase-config
+        configMap:
+          name: firebase-config
+      containers:
+      - name: {{ .Values.service.name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        resources:
+          requests:
+            cpu: {{ .Values.image.resources.requests.cpu }}
+            memory: {{ .Values.image.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.image.resources.limits.cpu }}
+            memory: {{ .Values.image.resources.limits.memory }}
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.services.httpPort | default "80" }}
+        livenessProbe:
+          httpGet:
+            port: {{ .Values.services.httpPort | default "80" }}
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds}}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds}}
+        ports:
+          - containerPort: {{ .Values.services.grpcPort | default "50051" }}
+            name: "{{ .Values.service.name |initials }}-grpc"
+          - containerPort: {{ .Values.services.httpPort | default "80" }}
+            name: "{{ .Values.service.name |initials }}-http"
+          - containerPort: {{ .Values.services.pprofPort | default "3000" }}
+            name: "{{ .Values.service.name | initials }}-prof"
+        volumeMounts:
+          - name: firebase-config
+            mountPath: "/config"
+            readOnly: true
+        env:
+          - name: CHECK_BODY
+            value: {{ .Values.services.checkBody | default true | quote }}
+          - name: FIRE_BASE_PROJECT_ID
+            value: {{ .Values.services.firebaseProjectId | default "medical-chain-fe54f" | quote }}
+          - name: DISABLE_TRACING
+            value: {{ .Values.services.disableTracing | default false | quote }}
+          - name: DISABLE_PROFILER
+            value: {{ .Values.services.disableProfiler | default false | quote }}
+          - name: VERSION
+            value: {{ .Values.services.version | default "v1.0.0" | quote }}
+          - name: GRPC_PORT
+            value: {{ .Values.services.grpcPort | default "50051" | quote }}
+          - name: AUTH_SERVICE_URL
+            value: {{ .Values.services.authServiceUrl | default "http://auth-service:50051" | quote }}
+          - name: HTTP_PORT
+            value: {{ .Values.services.httpPort | default "80" | quote }}
+          - name: PPROF_PORT
+            value: {{ .Values.services.pprofPort | default "3000" | quote }}
+          - name: DISABLE_STATS
+            value: {{ .Values.services.disableStats | default false | quote }}
+          - name: LOG_LEVEL
+            value: {{ .Values.services.logLevel | default "info" | quote }}
+          - name: LOG_FORMAT
+            value: {{ .Values.services.logFormat | default "json" | quote }}
+          - name: DB_URI
+            value: {{ .Values.services.dbUri | default "postgresql://root:root@cockroach-main-cockroachdb:26257/defaultdb?sslmode=disable" | quote }}
+          - name: FIRE_BASE_ACCOUNT_FILE
+            value: {{ .Values.services.fireBaseAccountFile | default "/config/account.json" | quote }}
+          - name: LOG_FILE_PATH
+            value: {{ .Values.logFilePath | default "" | quote }}
+          - name: COSMOS_ENDPOINT
+            value: {{ .Values.cosmos.endpoint | default "json" | quote }}
+          - name: MNEMONIC
+            value: {{ .Values.cosmos.mnemonic | default "json" | quote }}
+          - name: CHAIN_ID
+            value: {{ .Values.cosmos.chainId | default "json" | quote }}
+      {{- if .Values.seedData.enable }}
+      initContainers:
+        - name: "init-{{ .Values.service.name }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["seed-data"]
+          volumeMounts:
+          - name: firebase-config
+            mountPath: "/config"
+            readOnly: true
+          env:
+            - name: FIRE_BASE_PROJECT_ID
+              value: {{ .Values.services.firebaseProjectId | default "medical-chain-fe54f" | quote }}
+            - name: DISABLE_TRACING
+              value: {{ .Values.services.disableTracing | default false | quote }}
+            - name: DISABLE_PROFILER
+              value: {{ .Values.services.disableProfiler | default false | quote }}
+            - name: VERSION
+              value: {{ .Values.services.version | default "v1.0.0" | quote }}
+            - name: DISABLE_STATS
+              value: {{ .Values.services.disableStats | default false | quote }}
+            - name: DB_URI
+              value: {{ .Values.services.dbUri | default "postgresql://root:root@cockroach-main-cockroachdb:26257/defaultdb?sslmode=disable" | quote }}
+            - name: AUTH_SERVICE_URL
+              value: {{ .Values.services.authServiceUrl | default "http://auth-service:50051" | quote }}
+            - name: CLEAN_DB
+              value: {{ .Values.services.cleanDB | default "false" | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.services.logLevel | default "info" | quote }}
+            - name: LOG_FORMAT
+              value: {{ .Values.services.logFormat | default "json" | quote }}
+            - name: FIRE_BASE_ACCOUNT_FILE
+              value: "/config/account.json"
+            - name: COSMOS_ENDPOINT
+              value: {{ .Values.cosmos.endpoint | default "json" | quote }}
+            - name: MNEMONIC
+              value: {{ .Values.cosmos.mnemonic | default "json" | quote }}
+            - name: CHAIN_ID
+              value: {{ .Values.cosmos.chainId | default "json" | quote }}
+      {{- end }}
+

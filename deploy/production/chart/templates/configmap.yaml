@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: firebase-config
+data:
+  account.json: |-
+{{ .Values.fireBaseAccountFile | default "account.json" | .Files.Get | indent 4}}

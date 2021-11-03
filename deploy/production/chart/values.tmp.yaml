@@ -1,0 +1,42 @@
+replicaCount: 1
+revisionHistoryLimit: 1
+image:
+  repository: supermedicalchain/main-service
+  tag: ${TAG}
+  pullPolicy: Always
+  resources:
+    requests:
+      cpu: 200m
+      memory: 100Mi
+    limits:
+      cpu: 400m
+      memory: 300Mi
+livenessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+service:
+  name: main-service
+fireBaseAccountFile: ${FIRE_BASE_ACCOUNT_FILE}
+logFilePath: ${LOG_FILE_PATH}
+cosmos:
+  endpoint: ${COSMOS_ENDPOINT}
+  mnemonic: ${MNEMONIC}
+  chainId: ${CHAIN_ID}
+services:
+  checkBody: ${CHECK_BODY}
+  disableTracing: ${DISABLE_TRACING}
+  disableProfiler: ${DISABLE_PROFILER}
+  version: ${VERSION}
+  grpcPort: ${GRPC_PORT}
+  httpPort: ${HTTP_PORT}
+  pprofPort: ${PPROF_PORT}
+  disableStats: ${DISABLE_STATS}
+  dbUri: ${DB_URI}
+  cleanDB: ${CLEAN_DB}
+  logLevel: ${LOG_LEVEL}
+  logFormat: ${LOG_FORMAT}
+  authServiceUrl: ${AUTH_SERVICE_URL}
+  firebaseProjectId: ${FIRE_BASE_PROJECT_ID}  
+
+seedData:
+  enable: ${SEED_DATA}

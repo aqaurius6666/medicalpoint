@@ -1,0 +1,13 @@
+statefulset:
+  resources:
+    limits:
+      memory: "600Mi"
+    requests:
+      memory: "200Mi"
+
+conf:
+  cache: "150Mi"
+  max-sql-memory: "150Mi"
+storage:
+  persistentVolume:
+    size: "400Mi"

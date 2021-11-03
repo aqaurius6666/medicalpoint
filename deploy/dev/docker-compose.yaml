@@ -1,0 +1,56 @@
+version: "3.7"
+networks:
+  medical-chain-server:
+    name: medical-chain-server-dev
+services:
+  main-cdb:
+    image: cockroachdb/cockroach:v21.1.6
+    ports:
+      - "26258:26257"
+    command: start-single-node --insecure
+    volumes:
+      - "../../.db:/cockroach/cockroach-data"
+    networks:
+      - medical-chain-server
+  mainservice:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - "../../:/src"
+      - "/home/aqaurius6666/go:/go"
+    ports:
+      - "9091:80"
+      - "2345:2345"
+    depends_on:
+      - main-cdb
+    command:
+      - /bin/sh
+      - -c
+      - |
+        air
+    environment:
+      - CHECK_BODY=true
+      - DISABLE_TRACING=true
+      - DISABLE_PROFILER=true
+      - VERSION=0.0.1
+      - HTTP_PORT=80
+      - GRPC_PORT=50051
+      - PPROF_PORT=6000
+      - DISABLE_STATS=true
+      - DB_URI=postgresql://root:root@main-cdb:26257/defaultdb?sslmode=disable
+      - AUTH_SERVICE_URL=authservice:50051
+      - FIRE_BASE_ACCOUNT_FILE=.account.json
+      - LOG_LEVEL=debug
+      - LOG_FORMAT=plain
+      - SERVER_URL=http://localhost:9091
+      - COSMOS_ENDPOINT=uetbc.xyz:9090
+      - MNEMONIC=tongue worth box surprise frown history paddle royal ahead stable seven exchange online bronze diet gym fringe resist already october hockey festival manage fox
+      - CHAIN_ID=medichain
+      - FIRE_BASE_PROJECT_ID=medical-chain-fe54f
+      - GCFLAGS
+      - LOG_FILE_PATH=/var/medicom.log
+
+    networks:
+      - medical-chain-server
