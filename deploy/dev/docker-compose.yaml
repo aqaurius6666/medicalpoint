@@ -1,37 +1,55 @@
 version: "3.7"
 networks:
-  medical-chain-server:
-    name: medical-chain-server-dev
+  medicalpoint-gateway:
+    name: medicalpoint-gateway
 services:
-  main-cdb:
+  chain:
+    build:
+      dockerfile: chain.Dockerfile
+      context: ../..
+    command:
+      - /bin/sh
+      - -c
+      - |
+        ./init-chain.sh
+    environment:
+      - MONIKER=medicalpoint
+      - CHAIN_ID=test-chain
+      - VALIDATOR_MNEMONIC=hotel sword swarm scissors desk chase illegal idea noise humble track orient spare nurse dad insect agent prison learn polar talk soccer sadness above
+      - VALIDATOR_ACCOUNT=validator1
+      - AMOUNT=1000000000000000000stake
+      - SUPER_ADMIN_ADDRESS=medipoint1yvhdw3ups243zmxx9hvq3t5skm8ggyme86wv5n
+    networks:
+      - medicalpoint-gateway
+  gateway-cdb:
     image: cockroachdb/cockroach:v21.1.6
     ports:
-      - "26258:26257"
+      - "26259:26257"
     command: start-single-node --insecure
     volumes:
       - "../../.db:/cockroach/cockroach-data"
     networks:
-      - medical-chain-server
-  mainservice:
+      - medicalpoint-gateway
+  gateway:
     build:
       context: ../..
       dockerfile: Dockerfile
       target: dev
     volumes:
       - "../../:/src"
-      - "/home/aqaurius6666/go:/go"
+      - "$HOME/go:/go"
     ports:
-      - "9091:80"
-      - "2345:2345"
+      - "10998:80"
+      - "2344:2345"
     depends_on:
-      - main-cdb
+      - gateway-cdb
+      - chain
     command:
       - /bin/sh
       - -c
       - |
         air
     environment:
-      - CHECK_BODY=true
       - DISABLE_TRACING=true
       - DISABLE_PROFILER=true
       - VERSION=0.0.1
@@ -39,18 +57,13 @@ services:
       - GRPC_PORT=50051
       - PPROF_PORT=6000
       - DISABLE_STATS=true
-      - DB_URI=postgresql://root:root@main-cdb:26257/defaultdb?sslmode=disable
-      - AUTH_SERVICE_URL=authservice:50051
-      - FIRE_BASE_ACCOUNT_FILE=.account.json
+      - DB_URI=postgresql://root:root@gateway-cdb:26257/defaultdb?sslmode=disable
       - LOG_LEVEL=debug
       - LOG_FORMAT=plain
-      - SERVER_URL=http://localhost:9091
-      - COSMOS_ENDPOINT=uetbc.xyz:9090
-      - MNEMONIC=tongue worth box surprise frown history paddle royal ahead stable seven exchange online bronze diet gym fringe resist already october hockey festival manage fox
-      - CHAIN_ID=medichain
-      - FIRE_BASE_PROJECT_ID=medical-chain-fe54f
+      - COSMOS_ENDPOINT=chain:9090
+      - MNEMONIC=hotel sword swarm scissors desk chase illegal idea noise humble track orient spare nurse dad insect agent prison learn polar talk soccer sadness above
+      - CHAIN_ID=test-chain
       - GCFLAGS
-      - LOG_FILE_PATH=/var/medicom.log
-
+      - ENCRYPT_KEY=31237147183974198324719247184
     networks:
-      - medical-chain-server
+      - medicalpoint-gateway

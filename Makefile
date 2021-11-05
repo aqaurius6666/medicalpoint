@@ -1,5 +1,5 @@
 dev-recreate:
-	@docker-compose --project-name=medical-chain-dev --env-file deploy/dev/.env -f deploy/dev/docker-compose.yaml up -d --build --force-recreate
+	@docker-compose --project-name=medicalpoint-dev --env-file deploy/dev/.env -f deploy/dev/docker-compose.yaml up -d --build --force-recreate
 
 #dev-migration-up:
 #	NETWORK_NAME=medical-chain-server-dev docker-compose --project-name=medical-chain-dev -f deploy/dev/docker-compose-migration-tool.yaml up up
@@ -9,14 +9,14 @@ dev-recreate:
 build-and-push-image: build-image push-image
 
 build-image:
-	@docker build . --target=release -t supermedicalchain/main-service:pre-release
+	@docker build . --target=release -t supermedicalchain/medicalpoint-gateway:pre-release
 
 push-image:
-	@docker tag supermedicalchain/main-service:pre-release supermedicalchain/main-service${TAG}
-	@docker push supermedicalchain/main-service${TAG}
+	@docker tag supermedicalchain/medicalpoint-gateway:pre-release supermedicalchain/medicalpoint-gateway${TAG}
+	@docker push supermedicalchain/medicalpoint-gateway${TAG}
 
 build:
-	@go build -o ./dist/server .
+	@go build -o ./dist/server ./src
 
 debug:
 	@/bin/sh -c "dlv --listen=0.0.0.0:2345 --headless=true --api-version=2 exec ./dist/server -- --disable-profiler --allow-kill serve"
@@ -51,13 +51,13 @@ kill:
 	@(echo '{}' | grpc-client-cli -service CommonService -method Kill localhost:${GRPC_PORT}) > /nil 2> /nil || return 0
 
 logs:
-	@docker logs -f medical-chain-dev_mainservice_1
+	@docker logs -f medicalpoint-dev_gateway_1
 
-proto:
+proto2:
 	@./genproto.sh
 
-swagger: proto
-	@go generate ./src/swagger github.com/sotanext-team/medical-chain/src/mainservice/src/swagger 
+swagger: proto2
+	@go generate ./src/services/swagger github.com/medicalpoint/gateway/src/services/swagger 
 
 rebase: 
 	@git pull --rebase origin dev

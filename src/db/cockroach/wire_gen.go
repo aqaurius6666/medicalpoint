@@ -8,24 +8,31 @@ package cockroach
 import (
 	"context"
 	"github.com/medicalpoint/gateway/src/db/cockroach/user"
+	user2 "github.com/medicalpoint/gateway/src/db/interface/user"
 	"github.com/sirupsen/logrus"
 	"github.com/sonntuet1997/medical-chain-utils/cockroach"
 )
 
 // Injectors from gateway.repo.wire.cdb.go:
 
-func InitGatewayCDBRepo(ctx context.Context, opts GatewayCDBRepoOptions) (*GatewayCDBRepo, error) {
-	logger := opts.Logger
+func InitializeCDBRepo(ctx context.Context, opts GatewayCDBRepoOptions) (*GatewayCDBRepo, error) {
 	string2 := opts.Dsn
 	db, err := cockroach.NewCDBConnection(string2)
 	if err != nil {
 		return nil, err
+	}
+	logger := opts.Logger
+	cdbRepo := cockroach.CDBRepo{
+		Db:      db,
+		Logger:  logger,
+		Context: ctx,
 	}
 	userCDBRepo, err := user.InitUserCDBRepo(ctx, logger, db)
 	if err != nil {
 		return nil, err
 	}
 	gatewayCDBRepo := &GatewayCDBRepo{
+		CDBRepo:     cdbRepo,
 		UserCDBRepo: userCDBRepo,
 	}
 	return gatewayCDBRepo, nil
@@ -36,4 +43,16 @@ func InitGatewayCDBRepo(ctx context.Context, opts GatewayCDBRepoOptions) (*Gatew
 type GatewayCDBRepoOptions struct {
 	Dsn    string
 	Logger *logrus.Logger
+}
+
+func InitGatewayCDBRepo(ctx context.Context, opts GatewayCDBRepoOptions) (*GatewayCDBRepo, error) {
+	GatewayCDBRepo2, err := InitializeCDBRepo(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	GatewayCDBRepo2.
+		Interfaces = []interface{}{
+		&user2.User{},
+	}
+	return GatewayCDBRepo2, nil
 }

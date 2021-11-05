@@ -1,0 +1,192 @@
+syntax = "proto3";
+
+package medical_chain;
+import "google/api/annotations.proto";
+option go_package = "./api";
+
+
+service Gateway {
+
+    // Get admin
+    rpc GetAdmin(GetAdminRequest) returns (GetAdminResponse) {
+        option (google.api.http) = {
+            get: "/medicalpoint/admins"
+        };
+    }
+
+    // Create User
+    rpc PostUser(PostUserRequest) returns (PostUserResponse) {
+        option (google.api.http) = {
+            post: "/medicalpoint/users"
+            body: "*"
+        };
+    }
+
+     // Get Balance
+    rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {
+    option (google.api.http) = {
+        get: "/medicalpoint/balance"
+        };
+    }
+
+    // Init Super admin
+    rpc PostSuperAdmin(PostSuperAdminRequest) returns (PostSuperAdminResponse) {
+        option (google.api.http) = {
+            post: "/medicalpoint/super-admin"
+        };
+    }
+
+    // Mint point
+    rpc PostMint(PostMintRequest) returns (PostMintResponse) {
+        option (google.api.http) = {
+            post: "/medicalpoint/mint"
+            body: "*"
+        };
+    }
+
+    // Burn point
+    rpc PostBurn(PostBurnRequest) returns (PostBurnResponse) {
+        option (google.api.http) = {
+            post: "/medicalpoint/burn"
+            body: "*"
+        };
+    }
+
+
+    // Transfer point from user to user
+    rpc PostTransfer(PostTransferRequest) returns (PostTransferResponse) {
+        option (google.api.http) = {
+            post: "/medicalpoint/transfer"
+            body: "*"
+        };
+    }
+    
+    // Admin transfer point from system to user
+    rpc PostAdminTransfer(PostAdminTransferRequest) returns (PostAdminTransferResponse) {
+        option (google.api.http) = {
+            post: "/medicalpoint/admin-transfer"
+            body: "*"
+        };
+    }
+    
+}
+
+message PostUserRequest {
+    //userId in main server
+    string userId = 1;
+}
+
+message PostUserResponse {
+    //userId in main server
+    string userId = 1;
+}
+
+
+message GetAdminRequest {
+
+}
+
+
+message GetAdminResponse {
+
+}
+
+message GetBalanceRequest {
+    //userId of user in main server that want to check balance
+    string userId = 1;
+}
+
+
+message GetBalanceResponse {
+    // list of balances
+    repeated Point balances = 1;
+    message Point {
+        // denom name of token
+        string denom = 1;
+        // amount of token
+        string amount = 2;
+    }
+}
+
+message PostSuperAdminRequest {
+    // userId of user in main server that want to be super admin
+    string userId = 1;
+}
+
+
+message PostSuperAdminResponse {
+    string userId = 2;
+}
+
+message PostMintRequest {
+    // amount of token to mint
+    string amount = 1;
+    // userId of superadmin in main server 
+    string userId = 2;
+}
+
+
+message PostMintResponse {
+    string userId = 1;
+    // amount of token has been minted
+    string amount = 2;
+    // txh of transaction mint
+    string txh = 3;
+}
+
+message PostBurnRequest {
+    // userId of superadmin in main server 
+    string userId = 1;
+    // amount of token to burn
+    string amount = 2;
+}
+
+message PostBurnResponse {
+    string userId = 1;
+    // amount of token has been burned
+    string amount = 2;
+    // txh of transaction burn
+    string txh = 3;
+}
+
+message PostTransferRequest {
+    // userId of sender user in main server 
+    string userId = 1;
+    // userId of reciever user in main server 
+    string to = 2;
+    // amount of token to transfer
+    string amount = 3;
+    // denom name of token to transfer (eg: point)
+    string denom = 4;
+}
+
+message PostTransferResponse {
+    string userId = 1;
+    string to = 2;
+    // amount of token has been transfered
+    string amount = 3;
+    string denom = 4;
+    // txh of transaction transfer
+    string txh = 5;
+}
+
+message PostAdminTransferRequest {
+    // userId of sender admin in main server 
+    string userId = 1;
+    // userId of reciever user in main server 
+    string to = 2;
+    // amount of token to transfer
+    string amount = 3;
+    // denom name of token to transfer (eg: point)
+    string denom = 4;
+}
+
+message PostAdminTransferResponse {
+    string userId = 1;
+    string to = 2;
+    // amount of token has been transfered
+    string amount = 3;
+    string denom = 4;
+    // txh of transaction admin-transfer
+    string txh = 5;
+}

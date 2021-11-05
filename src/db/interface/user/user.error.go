@@ -1,5 +1,8 @@
 package user
 
+import "golang.org/x/xerrors"
+
 var (
-	_ = ""
+	ErrCreateFail = xerrors.New("create user fail")
+	ErrNotFound   = xerrors.New("user not found")
 )

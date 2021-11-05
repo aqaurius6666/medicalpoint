@@ -25,20 +25,18 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/sotanext-team/medical-chain/src/mainservice/src/swagger"
-	"github.com/tendermint/spm/cosmoscmd"
-
 	"cloud.google.com/go/profiler"
 	"contrib.go.opencensus.io/exporter/stackdriver"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/medicalpoint/gateway/src/api"
+	"github.com/medicalpoint/gateway/src/db"
+	"github.com/medicalpoint/gateway/src/services/cosmos"
+	"github.com/medicalpoint/gateway/src/services/swagger"
 	"github.com/sonntuet1997/medical-chain-utils/common_service"
 	pb2 "github.com/sonntuet1997/medical-chain-utils/common_service/pb"
-	"github.com/sotanext-team/medical-chain/src/mainservice/src/api"
-	"github.com/sotanext-team/medical-chain/src/mainservice/src/db"
-	"github.com/sotanext-team/medical-chain/src/mainservice/src/services/cosmos"
-
-	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"github.com/tendermint/spm/cosmoscmd"
 	"github.com/urfave/cli/v2"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
@@ -53,8 +51,8 @@ func runMain(appCtx *cli.Context) error {
 	var wg sync.WaitGroup
 	ctx, cancelFn := context.WithCancel(context.Background())
 	defer cancelFn()
-	cosmoscmd.SetPrefixes("medichain")
-	server, err := InitializeMainServer(
+	cosmoscmd.SetPrefixes("medipoint")
+	server, err := InitGateWayServer(
 		ctx,
 		AppOptions{
 			cliContext: appCtx,
@@ -63,18 +61,19 @@ func runMain(appCtx *cli.Context) error {
 			KeyRing:    keyring.NewUnsafe(keyring.NewInMemory()),
 			CosmosEp:   cosmos.CosmosEndpoint(appCtx.String("cosmos-endpoint")),
 			Mne:        cosmos.Mnemonic(appCtx.String("mnemonic")),
+			Key:        appCtx.String("encrypt-key"),
 		},
 	)
 	if err != nil {
 		return err
 	}
-	defer func(mainServer *api.MainServer) {
-		err := mainServer.MainServiceRepo.Close()
+	defer func(mainServer *api.GateWayServer) {
+		err := mainServer.Repo.Close()
 		if err != nil {
 			panic("error when closing DB Connection!")
 		}
 	}(server)
-	err = server.MainServiceRepo.Migrate()
+	err = server.Repo.Migrate()
 	if err != nil {
 		return err
 	}
@@ -137,7 +136,7 @@ func runMain(appCtx *cli.Context) error {
 		server.RegisterEndpoint()
 		server.G.GET("/swagger/*any", swagger.CustomWrapHandler(
 			&ginSwagger.Config{
-				URL:         "main-service.json",
+				URL:         "gateway.json",
 				DeepLinking: true,
 			},
 			swaggerFiles.Handler))

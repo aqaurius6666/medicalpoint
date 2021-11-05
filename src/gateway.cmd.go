@@ -91,6 +91,12 @@ func makeApp() *cli.App {
 				EnvVars: []string{"CHAIN_ID"},
 				Usage:   "Cosmos blockchain id",
 			},
+			&cli.StringFlag{
+				Name:    "encrypt-key",
+				Value:   "dpfuaiopfunaopur938qnruioef;aef7ranurlaer",
+				EnvVars: []string{"ENCRYPT_KEY"},
+				Usage:   "key to encrypt private key",
+			},
 		},
 			append(common.CommonGRPCFlag,
 				common.LoggerFlag...)...),

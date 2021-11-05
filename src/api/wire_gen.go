@@ -9,33 +9,46 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/medicalpoint/gateway/src/db"
+	"github.com/medicalpoint/gateway/src/services/cosmos"
 	"github.com/sirupsen/logrus"
 )
 
-// Injectors from index.wire.go:
+// Injectors from server.wire.go:
 
 func InitApiService(ctx context.Context, opts ApiServiceOptions) (*GateWayServer, error) {
 	engine := gin.New()
 	gateWayServiceRepo := opts.GateWayCDBRepo
+	cosmosServiceClient := opts.Chain
 	logger := opts.Logger
+	string2 := opts.Key
 	blockchainService := &BlockchainService{
 		db:     gateWayServiceRepo,
+		chain:  cosmosServiceClient,
 		logger: logger,
+		key:    string2,
 	}
 	blockchainApi := &BlockchainApi{
-		blockchainService: blockchainService,
-		logger:            logger,
+		service: blockchainService,
+		logger:  logger,
+	}
+	loggerMiddleware := &LoggerMiddleware{
+		logger: logger,
 	}
 	gateWayServer := &GateWayServer{
 		G:          engine,
 		blockchain: blockchainApi,
+		Repo:       gateWayServiceRepo,
+		chain:      cosmosServiceClient,
+		logger:     loggerMiddleware,
 	}
 	return gateWayServer, nil
 }
 
-// index.wire.go:
+// server.wire.go:
 
 type ApiServiceOptions struct {
 	Logger         *logrus.Logger
 	GateWayCDBRepo db.GateWayServiceRepo
+	Chain          *cosmos.CosmosServiceClient
+	Key            string
 }
