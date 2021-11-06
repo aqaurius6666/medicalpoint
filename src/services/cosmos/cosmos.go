@@ -123,9 +123,9 @@ func (s *CosmosServiceClient) GenPrivateKey() *secp256k1.PrivKey {
 }
 
 func (s *CosmosServiceClient) Encrypt(priv *secp256k1.PrivKey, passphrase string) (string, error) {
-	privByte, _ := hex.DecodeString("A7FF23E8D73FC8D6D1F462AC93AD92EF9A383A8771A6E9B9651D4294CA39BD6C")
-	// cipher, err := cryptography.EncryptMessage(priv.Bytes(), []byte(passphrase))
-	cipher, err := cryptography.EncryptMessage(privByte, []byte(passphrase))
+	// privByte, _ := hex.DecodeString("A7FF23E8D73FC8D6D1F462AC93AD92EF9A383A8771A6E9B9651D4294CA39BD6C")
+	// cipher, err := cryptography.EncryptMessage(privByte, []byte(passphrase))
+	cipher, err := cryptography.EncryptMessage(priv.Bytes(), []byte(passphrase))
 	if err != nil {
 		return "", xerrors.Errorf("%w", err)
 	}

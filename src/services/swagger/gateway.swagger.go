@@ -19,6 +19,70 @@ var GATEWAY_JSON = `{
     "application/json"
   ],
   "paths": {
+    "/medicalpoint/admin": {
+      "delete": {
+        "summary": "Delete Admin from chain, not delete in database",
+        "operationId": "Gateway_DeleteAdmin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/medical_chainDeleteAdminResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/medical_chainDeleteAdminRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Gateway"
+        ]
+      },
+      "post": {
+        "summary": "Add admin",
+        "operationId": "Gateway_PostAdmin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/medical_chainPostAdminResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/medical_chainPostAdminRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Gateway"
+        ]
+      }
+    },
     "/medicalpoint/admin-transfer": {
       "post": {
         "summary": "Admin transfer point from system to user",
@@ -196,6 +260,29 @@ var GATEWAY_JSON = `{
         ]
       }
     },
+    "/medicalpoint/system-balance": {
+      "get": {
+        "summary": "Get system balances",
+        "operationId": "Gateway_GetSystemBalance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/medical_chainGetSystemBalanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Gateway"
+        ]
+      }
+    },
     "/medicalpoint/transfer": {
       "post": {
         "summary": "Transfer point from user to user",
@@ -264,16 +351,31 @@ var GATEWAY_JSON = `{
     }
   },
   "definitions": {
-    "GetBalanceResponsePoint": {
+    "medical_chainDeleteAdminRequest": {
       "type": "object",
       "properties": {
-        "denom": {
+        "userId": {
           "type": "string",
-          "title": "denom name of token"
+          "title": "userId of superadmin in main server"
         },
-        "amount": {
+        "adminId": {
           "type": "string",
-          "title": "amount of token"
+          "title": "adminId of admin to delete"
+        }
+      }
+    },
+    "medical_chainDeleteAdminResponse": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "adminId": {
+          "type": "string"
+        },
+        "txh": {
+          "type": "string",
+          "title": "txh of transaction delete-admin"
         }
       }
     },
@@ -286,9 +388,75 @@ var GATEWAY_JSON = `{
         "balances": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/GetBalanceResponsePoint"
+            "$ref": "#/definitions/medical_chainGetBalanceResponsePoint"
           },
           "title": "list of balances"
+        }
+      }
+    },
+    "medical_chainGetBalanceResponsePoint": {
+      "type": "object",
+      "properties": {
+        "denom": {
+          "type": "string",
+          "title": "denom name of token"
+        },
+        "amount": {
+          "type": "string",
+          "title": "amount of token"
+        }
+      }
+    },
+    "medical_chainGetSystemBalanceResponse": {
+      "type": "object",
+      "properties": {
+        "balances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/medical_chainGetSystemBalanceResponsePoint"
+          },
+          "title": "list of balances"
+        }
+      }
+    },
+    "medical_chainGetSystemBalanceResponsePoint": {
+      "type": "object",
+      "properties": {
+        "denom": {
+          "type": "string",
+          "title": "denom name of token"
+        },
+        "amount": {
+          "type": "string",
+          "title": "amount of token"
+        }
+      }
+    },
+    "medical_chainPostAdminRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "title": "userId of superadmin in main server"
+        },
+        "adminId": {
+          "type": "string",
+          "title": "adminId of admin to add"
+        }
+      }
+    },
+    "medical_chainPostAdminResponse": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "adminId": {
+          "type": "string"
+        },
+        "txh": {
+          "type": "string",
+          "title": "txh of transaction create-admin"
         }
       }
     },

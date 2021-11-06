@@ -14,11 +14,6 @@ type BlockchainApi struct {
 
 func (b *BlockchainApi) HandleAdminGet(g *gin.Context) {
 	req := &api.GetAdminRequest{}
-	// err := g.BindJSON(req)
-	// if err != nil {
-	// 	lib.ErrBadRequest(g, err)
-	// 	return
-	// }
 	res, err := b.service.GetAdmin(req)
 	if err != nil {
 		lib.ErrBadRequest(g, err)
@@ -122,6 +117,47 @@ func (b *BlockchainApi) HandleAdminTransferPost(g *gin.Context) {
 		return
 	}
 	res, err := b.service.AdminTransfer(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	lib.Success(g, res)
+}
+
+func (b *BlockchainApi) HandleAdminPost(g *gin.Context) {
+	req := &api.PostAdminRequest{}
+	err := g.BindJSON(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	res, err := b.service.AddAdmin(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	lib.Success(g, res)
+}
+
+func (b *BlockchainApi) HandleAdminDelete(g *gin.Context) {
+	req := &api.DeleteAdminRequest{}
+	err := g.BindJSON(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	res, err := b.service.DeleteAdmin(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	lib.Success(g, res)
+}
+
+func (b *BlockchainApi) HandleSystemBalanceGet(g *gin.Context) {
+	req := &api.GetSystemBalanceRequest{}
+
+	res, err := b.service.GetSystemBalance(req)
 	if err != nil {
 		lib.ErrBadRequest(g, err)
 		return

@@ -32,4 +32,7 @@ func (s *GateWayServer) RegisterEndpoint() {
 	medicalpoint.POST("/burn", s.blockchain.HandleBurnPost)
 	medicalpoint.POST("/transfer", s.blockchain.HandleTransferPost)
 	medicalpoint.POST("/admin-transfer", s.blockchain.HandleAdminTransferPost)
+	medicalpoint.POST("/admin", s.blockchain.HandleAdminPost)
+	medicalpoint.DELETE("/admin", s.blockchain.HandleAdminDelete)
+	medicalpoint.GET("/system-balance", s.blockchain.HandleAdminDelete)
 }

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,6 +60,11 @@ func (b *BlockchainService) GetBalance(req *api.GetBalanceRequest) (*api.GetBala
 		Balances: balances,
 	}, nil
 }
+
+func (b *BlockchainService) GetSystemBalance(req *api.GetSystemBalanceRequest) (*api.GetSystemBalanceResponse, error) {
+	return &api.GetSystemBalanceResponse{}, nil
+}
+
 func (b BlockchainService) CreateUser(req *api.PostUserRequest) (*api.PostUserResponse, error) {
 	if req.UserId == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
@@ -120,10 +124,6 @@ func (b BlockchainService) Mint(req *api.PostMintRequest) (*api.PostMintResponse
 	if err != nil {
 		return nil, xerrors.Errorf("%w", err)
 	}
-	fmt.Printf("amount: %v\n", types.MsgMint{
-		Creator: b.chain.GetAddress(privKey),
-		Amount:  uint64(amount),
-	})
 	tx, err := b.chain.TxMint(privKey, &types.MsgMint{
 		Creator: b.chain.GetAddress(privKey),
 		Amount:  uint64(amount),
@@ -262,5 +262,85 @@ func (b BlockchainService) AdminTransfer(req *api.PostAdminTransferRequest) (*ap
 		Amount: req.Amount,
 		Denom:  req.Denom,
 		Txh:    tx.TxResponse.TxHash,
+	}, nil
+}
+
+func (b BlockchainService) AddAdmin(req *api.PostAdminRequest) (*api.PostAdminResponse, error) {
+	if req.UserId == "" || req.AdminId == "" {
+		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
+	}
+	fromUser, err := b.db.GetUser(&user.SearchUser{
+		User: user.User{UserID: &req.UserId},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	fromPrivateKey, err := b.chain.Decrypt(*fromUser.EncryptedPrivateKey, b.key)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	privateKey := b.chain.GenPrivateKey()
+	encryptedPrivateKey, err := b.chain.Encrypt(privateKey, b.key)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	newAdmin, err := b.db.CreateUser(&user.User{
+		UserID:              &req.AdminId,
+		EncryptedPrivateKey: &encryptedPrivateKey,
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+
+	tx, err := b.chain.TxCreateAdmin(fromPrivateKey, &types.MsgCreateAdmin{
+		Creator: b.chain.GetAddress(fromPrivateKey),
+		Address: b.chain.GetAddress(privateKey.Bytes()),
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	return &api.PostAdminResponse{
+		UserId:  *fromUser.UserID,
+		AdminId: *newAdmin.UserID,
+		Txh:     tx.TxResponse.TxHash,
+	}, nil
+}
+
+func (b BlockchainService) DeleteAdmin(req *api.DeleteAdminRequest) (*api.DeleteAdminResponse, error) {
+	if req.UserId == "" || req.AdminId == "" {
+		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
+	}
+	fromUser, err := b.db.GetUser(&user.SearchUser{
+		User: user.User{UserID: &req.UserId},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	fromPrivateKey, err := b.chain.Decrypt(*fromUser.EncryptedPrivateKey, b.key)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	toUser, err := b.db.GetUser(&user.SearchUser{
+		User: user.User{UserID: &req.AdminId},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	toPrivateKey, err := b.chain.Decrypt(*toUser.EncryptedPrivateKey, b.key)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+
+	tx, err := b.chain.TxDeleteAdmin(fromPrivateKey, &types.MsgDeleteAdmin{
+		Creator: b.chain.GetAddress(fromPrivateKey),
+		Address: b.chain.GetAddress(toPrivateKey),
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	return &api.DeleteAdminResponse{
+		UserId:  *fromUser.UserID,
+		AdminId: *toUser.UserID,
+		Txh:     tx.TxResponse.TxHash,
 	}, nil
 }

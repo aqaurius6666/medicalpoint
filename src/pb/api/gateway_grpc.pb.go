@@ -30,10 +30,16 @@ type GatewayClient interface {
 	PostMint(ctx context.Context, in *PostMintRequest, opts ...grpc.CallOption) (*PostMintResponse, error)
 	// Burn point
 	PostBurn(ctx context.Context, in *PostBurnRequest, opts ...grpc.CallOption) (*PostBurnResponse, error)
+	// Add admin
+	PostAdmin(ctx context.Context, in *PostAdminRequest, opts ...grpc.CallOption) (*PostAdminResponse, error)
 	// Transfer point from user to user
 	PostTransfer(ctx context.Context, in *PostTransferRequest, opts ...grpc.CallOption) (*PostTransferResponse, error)
 	// Admin transfer point from system to user
 	PostAdminTransfer(ctx context.Context, in *PostAdminTransferRequest, opts ...grpc.CallOption) (*PostAdminTransferResponse, error)
+	// Delete Admin from chain, not delete in database
+	DeleteAdmin(ctx context.Context, in *DeleteAdminRequest, opts ...grpc.CallOption) (*DeleteAdminResponse, error)
+	// Get system balances
+	GetSystemBalance(ctx context.Context, in *GetSystemBalanceRequest, opts ...grpc.CallOption) (*GetSystemBalanceResponse, error)
 }
 
 type gatewayClient struct {
@@ -98,6 +104,15 @@ func (c *gatewayClient) PostBurn(ctx context.Context, in *PostBurnRequest, opts 
 	return out, nil
 }
 
+func (c *gatewayClient) PostAdmin(ctx context.Context, in *PostAdminRequest, opts ...grpc.CallOption) (*PostAdminResponse, error) {
+	out := new(PostAdminResponse)
+	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/PostAdmin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gatewayClient) PostTransfer(ctx context.Context, in *PostTransferRequest, opts ...grpc.CallOption) (*PostTransferResponse, error) {
 	out := new(PostTransferResponse)
 	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/PostTransfer", in, out, opts...)
@@ -110,6 +125,24 @@ func (c *gatewayClient) PostTransfer(ctx context.Context, in *PostTransferReques
 func (c *gatewayClient) PostAdminTransfer(ctx context.Context, in *PostAdminTransferRequest, opts ...grpc.CallOption) (*PostAdminTransferResponse, error) {
 	out := new(PostAdminTransferResponse)
 	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/PostAdminTransfer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) DeleteAdmin(ctx context.Context, in *DeleteAdminRequest, opts ...grpc.CallOption) (*DeleteAdminResponse, error) {
+	out := new(DeleteAdminResponse)
+	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/DeleteAdmin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) GetSystemBalance(ctx context.Context, in *GetSystemBalanceRequest, opts ...grpc.CallOption) (*GetSystemBalanceResponse, error) {
+	out := new(GetSystemBalanceResponse)
+	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/GetSystemBalance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -132,10 +165,16 @@ type GatewayServer interface {
 	PostMint(context.Context, *PostMintRequest) (*PostMintResponse, error)
 	// Burn point
 	PostBurn(context.Context, *PostBurnRequest) (*PostBurnResponse, error)
+	// Add admin
+	PostAdmin(context.Context, *PostAdminRequest) (*PostAdminResponse, error)
 	// Transfer point from user to user
 	PostTransfer(context.Context, *PostTransferRequest) (*PostTransferResponse, error)
 	// Admin transfer point from system to user
 	PostAdminTransfer(context.Context, *PostAdminTransferRequest) (*PostAdminTransferResponse, error)
+	// Delete Admin from chain, not delete in database
+	DeleteAdmin(context.Context, *DeleteAdminRequest) (*DeleteAdminResponse, error)
+	// Get system balances
+	GetSystemBalance(context.Context, *GetSystemBalanceRequest) (*GetSystemBalanceResponse, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -161,11 +200,20 @@ func (UnimplementedGatewayServer) PostMint(context.Context, *PostMintRequest) (*
 func (UnimplementedGatewayServer) PostBurn(context.Context, *PostBurnRequest) (*PostBurnResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostBurn not implemented")
 }
+func (UnimplementedGatewayServer) PostAdmin(context.Context, *PostAdminRequest) (*PostAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostAdmin not implemented")
+}
 func (UnimplementedGatewayServer) PostTransfer(context.Context, *PostTransferRequest) (*PostTransferResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostTransfer not implemented")
 }
 func (UnimplementedGatewayServer) PostAdminTransfer(context.Context, *PostAdminTransferRequest) (*PostAdminTransferResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostAdminTransfer not implemented")
+}
+func (UnimplementedGatewayServer) DeleteAdmin(context.Context, *DeleteAdminRequest) (*DeleteAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAdmin not implemented")
+}
+func (UnimplementedGatewayServer) GetSystemBalance(context.Context, *GetSystemBalanceRequest) (*GetSystemBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSystemBalance not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
@@ -288,6 +336,24 @@ func _Gateway_PostBurn_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_PostAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostAdminRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).PostAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/medical_chain.Gateway/PostAdmin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).PostAdmin(ctx, req.(*PostAdminRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Gateway_PostTransfer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PostTransferRequest)
 	if err := dec(in); err != nil {
@@ -324,6 +390,42 @@ func _Gateway_PostAdminTransfer_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_DeleteAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAdminRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).DeleteAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/medical_chain.Gateway/DeleteAdmin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).DeleteAdmin(ctx, req.(*DeleteAdminRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_GetSystemBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSystemBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GetSystemBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/medical_chain.Gateway/GetSystemBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GetSystemBalance(ctx, req.(*GetSystemBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Gateway_ServiceDesc is the grpc.ServiceDesc for Gateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -356,12 +458,24 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Gateway_PostBurn_Handler,
 		},
 		{
+			MethodName: "PostAdmin",
+			Handler:    _Gateway_PostAdmin_Handler,
+		},
+		{
 			MethodName: "PostTransfer",
 			Handler:    _Gateway_PostTransfer_Handler,
 		},
 		{
 			MethodName: "PostAdminTransfer",
 			Handler:    _Gateway_PostAdminTransfer_Handler,
+		},
+		{
+			MethodName: "DeleteAdmin",
+			Handler:    _Gateway_DeleteAdmin_Handler,
+		},
+		{
+			MethodName: "GetSystemBalance",
+			Handler:    _Gateway_GetSystemBalance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

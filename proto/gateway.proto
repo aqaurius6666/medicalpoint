@@ -52,6 +52,14 @@ service Gateway {
         };
     }
 
+    // Add admin
+    rpc PostAdmin(PostAdminRequest) returns (PostAdminResponse) {
+        option (google.api.http) = {
+            post: "/medicalpoint/admin"
+            body: "*"
+        };
+    }
+
 
     // Transfer point from user to user
     rpc PostTransfer(PostTransferRequest) returns (PostTransferResponse) {
@@ -68,8 +76,65 @@ service Gateway {
             body: "*"
         };
     }
+
+    // Delete Admin from chain, not delete in database
+    rpc DeleteAdmin(DeleteAdminRequest) returns (DeleteAdminResponse) {
+        option (google.api.http) = {
+            delete: "/medicalpoint/admin"
+            body: "*"
+        };
+    }
+     // Get system balances
+     rpc GetSystemBalance(GetSystemBalanceRequest) returns (GetSystemBalanceResponse) {
+        option (google.api.http) = {
+            get: "/medicalpoint/system-balance"
+        };
+    }
     
 }
+
+message GetSystemBalanceRequest {
+}
+
+message GetSystemBalanceResponse {
+    // list of balances
+    repeated Point balances = 1;
+    message Point {
+        // denom name of token
+        string denom = 1;
+        // amount of token
+        string amount = 2;
+    }
+}
+
+message DeleteAdminRequest {
+    //userId of superadmin in main server
+    string userId = 1;
+    //adminId of admin to delete
+    string adminId = 2;
+}
+
+message DeleteAdminResponse {
+    string userId = 1;
+    string adminId = 2;
+    // txh of transaction delete-admin
+    string txh = 3;
+}
+
+message PostAdminRequest {
+    //userId of superadmin in main server
+    string userId = 1;
+    //adminId of admin to add
+    string adminId = 2;
+}
+
+message PostAdminResponse {
+    string userId = 1;
+    string adminId = 2;
+    // txh of transaction create-admin
+    string txh = 3;
+}
+
 
 message PostUserRequest {
     //userId in main server
