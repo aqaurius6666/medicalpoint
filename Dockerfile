@@ -25,8 +25,8 @@ FROM base as dev
 RUN curl -fLo install.sh https://raw.githubusercontent.com/cosmtrek/air/master/install.sh \
     && chmod +x install.sh && sh install.sh && mv ./bin/air /bin/air
 RUN go install github.com/vadimi/grpc-client-cli/cmd/grpc-client-cli@latest
-COPY ./dlv.sh /src/
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
+COPY scripts/dlv.sh /src/
 
 
 FROM base as builder

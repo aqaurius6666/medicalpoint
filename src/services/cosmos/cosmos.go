@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -122,8 +123,9 @@ func (s *CosmosServiceClient) GenPrivateKey() *secp256k1.PrivKey {
 }
 
 func (s *CosmosServiceClient) Encrypt(priv *secp256k1.PrivKey, passphrase string) (string, error) {
-	// privByte, _ := hex.DecodeString("A7FF23E8D73FC8D6D1F462AC93AD92EF9A383A8771A6E9B9651D4294CA39BD6C")
-	cipher, err := cryptography.EncryptMessage(priv.Bytes(), []byte(passphrase))
+	privByte, _ := hex.DecodeString("A7FF23E8D73FC8D6D1F462AC93AD92EF9A383A8771A6E9B9651D4294CA39BD6C")
+	// cipher, err := cryptography.EncryptMessage(priv.Bytes(), []byte(passphrase))
+	cipher, err := cryptography.EncryptMessage(privByte, []byte(passphrase))
 	if err != nil {
 		return "", xerrors.Errorf("%w", err)
 	}
@@ -151,13 +153,15 @@ func (s *CosmosServiceClient) GetAccount(address string) (*types3.BaseAccount, e
 		return nil, xerrors.New(message)
 	}
 	var account = types3.BaseAccount{}
-
 	bz, err := s.cdc.MarshalJSON(res.Account)
 	if err != nil {
 		message := status.Convert(err).Message()
 		return nil, xerrors.New(message)
 	}
-
+	bz, err = s.ConvertAccountByte(bz)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
 	err = json.Unmarshal(bz, &account)
 	if err != nil {
 		message := status.Convert(err).Message()
@@ -166,7 +170,24 @@ func (s *CosmosServiceClient) GetAccount(address string) (*types3.BaseAccount, e
 
 	return &account, nil
 }
-
+func (s *CosmosServiceClient) ConvertAccountByte(bz []byte) ([]byte, error) {
+	var temp map[string]interface{}
+	var err error
+	json.Unmarshal(bz, &temp)
+	temp["account_number"], err = strconv.ParseInt(temp["account_number"].(string), 10, 64)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	temp["sequence"], err = strconv.ParseInt(temp["sequence"].(string), 10, 64)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	nbz, err := json.Marshal(temp)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	return nbz, nil
+}
 func (s *CosmosServiceClient) AddAccountFromMnemonic(uid string, mnemonic string) (keyring.Info, error) {
 	return s.keyring.NewAccount(uid, mnemonic, "", "m/44'/118'/0'/0", hd.Secp256k1)
 }

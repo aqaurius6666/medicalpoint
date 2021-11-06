@@ -54,7 +54,7 @@ logs:
 	@docker logs -f medicalpoint-dev_gateway_1
 
 proto2:
-	@./genproto.sh
+	@./scripts/genproto.sh
 
 swagger: proto2
 	@go generate ./src/services/swagger github.com/medicalpoint/gateway/src/services/swagger 
