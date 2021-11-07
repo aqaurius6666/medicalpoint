@@ -1,12 +1,10 @@
 version: "3.7"
-networks:
-  medicalpoint-gateway:
-    name: medicalpoint-gateway
 services:
   chain:
-    build:
-      dockerfile: chain.Dockerfile
-      context: ../..
+    image: aqaurius6666/medicalpoint:latest
+    ports:
+      - "9191:9090"
+      - "26657:26657"
     command:
       - /bin/sh
       - -c
@@ -21,8 +19,6 @@ services:
       - VALIDATOR_ACCOUNT=validator1
       - AMOUNT=1000000000000000000stake
       - SUPER_ADMIN_ADDRESS=medipoint1yvhdw3ups243zmxx9hvq3t5skm8ggyme86wv5n
-    networks:
-      - medicalpoint-gateway
   gateway-cdb:
     image: cockroachdb/cockroach:v21.1.6
     ports:
@@ -30,19 +26,11 @@ services:
     command: start-single-node --insecure
     volumes:
       - "../../.db:/cockroach/cockroach-data"
-    networks:
-      - medicalpoint-gateway
+
   gateway:
-    build:
-      context: ../..
-      dockerfile: Dockerfile
-      target: dev
-    volumes:
-      - "../../:/src"
-      - "$HOME/go:/go"
+    image: aqaurius6666/medicalpoint-gateway:latest
     ports:
       - "10998:80"
-      - "2344:2345"
     depends_on:
       - gateway-cdb
       - chain
@@ -50,7 +38,7 @@ services:
       - /bin/sh
       - -c
       - |
-        air
+        server serve
     environment:
       - DISABLE_TRACING=true
       - DISABLE_PROFILER=true
@@ -67,5 +55,4 @@ services:
       - CHAIN_ID=test-chain
       - GCFLAGS
       - ENCRYPT_KEY=31237147183974198324719247184
-    networks:
-      - medicalpoint-gateway
+ 

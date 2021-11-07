@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/medicalpoint/gateway/src/db"
-	"github.com/medicalpoint/gateway/src/db/cockroach/user"
+	"github.com/medicalpoint/gateway/src/db/interface/user"
 	"github.com/sonntuet1997/medical-chain-utils/common"
 	"github.com/urfave/cli/v2"
 )
@@ -59,16 +59,19 @@ func seedData(appCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err = seedUser(service)
+	err = seedSuperAdmin(service, appCtx.String("super-admin-id"))
 	if err != nil {
 		log.Println("seed users fail, err:", err)
 	}
 
 	return nil
 }
-
-func seedUser(db db.GateWayServiceRepo) error {
-	err := db.RawSql(user.UserSeedDataCDB)
+func seedSuperAdmin(db db.GateWayServiceRepo, id string) error {
+	encryptedKey := "4+H3nDRdP0xi6e3/Yo94mO0AmMcIgLMZuV/TLIWvS6fBbS7dEBtIK2h5OQOE/JpUcTnnBLnHVZRscdb4"
+	_, err := db.CreateUser(&user.User{
+		UserID:              &id,
+		EncryptedPrivateKey: &encryptedKey,
+	})
 	if err != nil {
 		return err
 	}

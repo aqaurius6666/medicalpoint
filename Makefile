@@ -9,11 +9,11 @@ dev-recreate:
 build-and-push-image: build-image push-image
 
 build-image:
-	@docker build . --target=release -t supermedicalchain/medicalpoint-gateway:pre-release
+	@docker build . --target=release -t aqaurius6666/medicalpoint-gateway:pre-release
 
 push-image:
-	@docker tag supermedicalchain/medicalpoint-gateway:pre-release supermedicalchain/medicalpoint-gateway${TAG}
-	@docker push supermedicalchain/medicalpoint-gateway${TAG}
+	@docker tag aqaurius6666/medicalpoint-gateway:pre-release aqaurius6666/medicalpoint-gateway${TAG}
+	@docker push aqaurius6666/medicalpoint-gateway${TAG}
 
 build:
 	@go build -o ./dist/server ./src

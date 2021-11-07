@@ -1,4 +1,5 @@
 #!/bin/sh
+rm -Rf ~/.medipoint
 medipointd config keyring-backend test 
 medipointd init $MONIKER --chain-id $CHAIN_ID --overwrite 
 echo $VALIDATOR_MNEMONIC | medipointd keys add $VALIDATOR_ACCOUNT --hd-path "m/44'/118'/0'/0" --recover --interactive=false

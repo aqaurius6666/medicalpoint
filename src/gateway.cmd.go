@@ -56,6 +56,11 @@ func makeApp() *cli.App {
 						EnvVars: []string{"CLEAN_DB"},
 						Usage:   "Clean DB before seeding",
 					},
+					&cli.StringFlag{
+						Name:    "super-admin-id",
+						EnvVars: []string{"SUPER_ADMIN_ID"},
+						Usage:   "super admin id to init database",
+					},
 				},
 			},
 			{
