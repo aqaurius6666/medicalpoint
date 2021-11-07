@@ -12,16 +12,6 @@ type BlockchainApi struct {
 	logger  *logrus.Logger
 }
 
-func (b *BlockchainApi) HandleAdminGet(g *gin.Context) {
-	req := &api.GetAdminRequest{}
-	res, err := b.service.GetAdmin(req)
-	if err != nil {
-		lib.ErrBadRequest(g, err)
-		return
-	}
-	lib.Success(g, res)
-}
-
 func (b *BlockchainApi) HandleUserPost(g *gin.Context) {
 	req := &api.PostUserRequest{}
 	err := g.BindJSON(req)
@@ -39,24 +29,9 @@ func (b *BlockchainApi) HandleUserPost(g *gin.Context) {
 
 func (b *BlockchainApi) HandleBalanceGet(g *gin.Context) {
 	req := &api.GetBalanceRequest{
-		UserId: g.Query("userId"),
+		Id: g.Query("id"),
 	}
 	res, err := b.service.GetBalance(req)
-	if err != nil {
-		lib.ErrBadRequest(g, err)
-		return
-	}
-	lib.Success(g, res)
-}
-
-func (b *BlockchainApi) HandleSuperAdminPost(g *gin.Context) {
-	req := &api.PostSuperAdminRequest{}
-	err := g.BindJSON(req)
-	if err != nil {
-		lib.ErrBadRequest(g, err)
-		return
-	}
-	res, err := b.service.InitSuperAdmin(req)
 	if err != nil {
 		lib.ErrBadRequest(g, err)
 		return
@@ -102,6 +77,29 @@ func (b *BlockchainApi) HandleTransferPost(g *gin.Context) {
 		return
 	}
 	res, err := b.service.Transfer(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	lib.Success(g, res)
+}
+func (b *BlockchainApi) HandleSuperAdminPut(g *gin.Context) {
+	req := &api.PutSuperAdminRequest{}
+	err := g.BindJSON(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	res, err := b.service.UpdateSuperAdmin(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	lib.Success(g, res)
+}
+func (b *BlockchainApi) HandleTotalSupplyGet(g *gin.Context) {
+	req := &api.GetTotalSupplyRequest{}
+	res, err := b.service.GetTotalSupply(req)
 	if err != nil {
 		lib.ErrBadRequest(g, err)
 		return

@@ -116,29 +116,6 @@ var GATEWAY_JSON = `{
         ]
       }
     },
-    "/medicalpoint/admins": {
-      "get": {
-        "summary": "Get admin",
-        "operationId": "Gateway_GetAdmin",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/medical_chainGetAdminResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "Gateway"
-        ]
-      }
-    },
     "/medicalpoint/balance": {
       "get": {
         "summary": "Get Balance",
@@ -159,8 +136,8 @@ var GATEWAY_JSON = `{
         },
         "parameters": [
           {
-            "name": "userId",
-            "description": "userId of user in main server that want to check balance.",
+            "name": "id",
+            "description": "id of user in main server that want to check balance.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -238,14 +215,14 @@ var GATEWAY_JSON = `{
       }
     },
     "/medicalpoint/super-admin": {
-      "post": {
-        "summary": "Init Super admin",
-        "operationId": "Gateway_PostSuperAdmin",
+      "put": {
+        "summary": "Update super-admin to another user",
+        "operationId": "Gateway_PutSuperAdmin",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/medical_chainPostSuperAdminResponse"
+              "$ref": "#/definitions/medical_chainPutSuperAdminResponse"
             }
           },
           "default": {
@@ -255,6 +232,16 @@ var GATEWAY_JSON = `{
             }
           }
         },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/medical_chainPutSuperAdminRequest"
+            }
+          }
+        ],
         "tags": [
           "Gateway"
         ]
@@ -269,6 +256,29 @@ var GATEWAY_JSON = `{
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/medical_chainGetSystemBalanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Gateway"
+        ]
+      }
+    },
+    "/medicalpoint/total-supply": {
+      "get": {
+        "summary": "Get total supply in system",
+        "operationId": "Gateway_GetTotalSupply",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/medical_chainGetTotalSupplyResponse"
             }
           },
           "default": {
@@ -354,9 +364,9 @@ var GATEWAY_JSON = `{
     "medical_chainDeleteAdminRequest": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string",
-          "title": "userId of superadmin in main server"
+          "title": "id of superadmin in main server"
         },
         "adminId": {
           "type": "string",
@@ -367,7 +377,7 @@ var GATEWAY_JSON = `{
     "medical_chainDeleteAdminResponse": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string"
         },
         "adminId": {
@@ -378,9 +388,6 @@ var GATEWAY_JSON = `{
           "title": "txh of transaction delete-admin"
         }
       }
-    },
-    "medical_chainGetAdminResponse": {
-      "type": "object"
     },
     "medical_chainGetBalanceResponse": {
       "type": "object",
@@ -432,12 +439,37 @@ var GATEWAY_JSON = `{
         }
       }
     },
+    "medical_chainGetTotalSupplyResponse": {
+      "type": "object",
+      "properties": {
+        "balances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/medical_chainGetTotalSupplyResponsePoint"
+          },
+          "title": "list of balances"
+        }
+      }
+    },
+    "medical_chainGetTotalSupplyResponsePoint": {
+      "type": "object",
+      "properties": {
+        "denom": {
+          "type": "string",
+          "title": "denom name of token"
+        },
+        "amount": {
+          "type": "string",
+          "title": "amount of token"
+        }
+      }
+    },
     "medical_chainPostAdminRequest": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string",
-          "title": "userId of superadmin in main server"
+          "title": "id of superadmin in main server"
         },
         "adminId": {
           "type": "string",
@@ -448,7 +480,7 @@ var GATEWAY_JSON = `{
     "medical_chainPostAdminResponse": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string"
         },
         "adminId": {
@@ -463,13 +495,13 @@ var GATEWAY_JSON = `{
     "medical_chainPostAdminTransferRequest": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string",
-          "title": "userId of sender admin in main server"
+          "title": "id of admin in main server"
         },
         "to": {
           "type": "string",
-          "title": "userId of reciever user in main server"
+          "title": "id of reciever user in main server"
         },
         "amount": {
           "type": "string",
@@ -484,7 +516,7 @@ var GATEWAY_JSON = `{
     "medical_chainPostAdminTransferResponse": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string"
         },
         "to": {
@@ -506,9 +538,9 @@ var GATEWAY_JSON = `{
     "medical_chainPostBurnRequest": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string",
-          "title": "userId of superadmin in main server"
+          "title": "id of superadmin in main server"
         },
         "amount": {
           "type": "string",
@@ -519,7 +551,7 @@ var GATEWAY_JSON = `{
     "medical_chainPostBurnResponse": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string"
         },
         "amount": {
@@ -539,16 +571,16 @@ var GATEWAY_JSON = `{
           "type": "string",
           "title": "amount of token to mint"
         },
-        "userId": {
+        "id": {
           "type": "string",
-          "title": "userId of superadmin in main server"
+          "title": "id of superadmin in main server"
         }
       }
     },
     "medical_chainPostMintResponse": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string"
         },
         "amount": {
@@ -561,24 +593,16 @@ var GATEWAY_JSON = `{
         }
       }
     },
-    "medical_chainPostSuperAdminResponse": {
-      "type": "object",
-      "properties": {
-        "userId": {
-          "type": "string"
-        }
-      }
-    },
     "medical_chainPostTransferRequest": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string",
-          "title": "userId of sender user in main server"
+          "title": "id of sender user in main server"
         },
         "to": {
           "type": "string",
-          "title": "userId of reciever user in main server"
+          "title": "id of reciever user in main server"
         },
         "amount": {
           "type": "string",
@@ -593,7 +617,7 @@ var GATEWAY_JSON = `{
     "medical_chainPostTransferResponse": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string"
         },
         "to": {
@@ -615,18 +639,45 @@ var GATEWAY_JSON = `{
     "medical_chainPostUserRequest": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
           "type": "string",
-          "title": "userId in main server"
+          "title": "id in main server"
         }
       }
     },
     "medical_chainPostUserResponse": {
       "type": "object",
       "properties": {
-        "userId": {
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    "medical_chainPutSuperAdminRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string",
-          "title": "userId in main server"
+          "title": "id of current superadmin in main server"
+        },
+        "adminId": {
+          "type": "string",
+          "title": "id of new admin to update, must existed in system"
+        }
+      }
+    },
+    "medical_chainPutSuperAdminResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "adminId": {
+          "type": "string"
+        },
+        "txh": {
+          "type": "string",
+          "title": "txh of transaction transfer-super-admin"
         }
       }
     },

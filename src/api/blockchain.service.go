@@ -16,6 +16,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var (
+	COIN_STAKE = "stake"
+)
+
 type BlockchainService struct {
 	db     db.GateWayServiceRepo
 	chain  *cosmos.CosmosServiceClient
@@ -23,17 +27,12 @@ type BlockchainService struct {
 	key    string
 }
 
-func (b *BlockchainService) GetAdmin(req *api.GetAdminRequest) (*api.GetAdminResponse, error) {
-
-	return &api.GetAdminResponse{}, nil
-}
-
 func (b *BlockchainService) GetBalance(req *api.GetBalanceRequest) (*api.GetBalanceResponse, error) {
-	if req.UserId == "" {
+	if req.Id == "" {
 		return nil, xerrors.Errorf("%w", e.ErrQueryInvalid)
 	}
 	user, err := b.db.GetUser(&user.SearchUser{
-		User: user.User{UserID: &req.UserId},
+		User: user.User{UserID: &req.Id},
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("%w", err)
@@ -51,6 +50,9 @@ func (b *BlockchainService) GetBalance(req *api.GetBalanceRequest) (*api.GetBala
 	balances := make([]*api.GetBalanceResponse_Point, 0)
 	for i := 0; i < out.Balances.Len(); i++ {
 		denom := out.Balances.GetDenomByIndex(i)
+		if denom == COIN_STAKE {
+			continue
+		}
 		balances = append(balances, &api.GetBalanceResponse_Point{
 			Denom:  denom,
 			Amount: out.Balances.AmountOf(denom).String(),
@@ -62,11 +64,43 @@ func (b *BlockchainService) GetBalance(req *api.GetBalanceRequest) (*api.GetBala
 }
 
 func (b *BlockchainService) GetSystemBalance(req *api.GetSystemBalanceRequest) (*api.GetSystemBalanceResponse, error) {
-	return &api.GetSystemBalanceResponse{}, nil
+	res, err := b.chain.QueryGetSystemBalance(&types.QuerySystemBalanceRequest{})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	balances := make([]*api.GetSystemBalanceResponse_Point, 0)
+	balances = append(balances, &api.GetSystemBalanceResponse_Point{
+		Denom:  res.Balance.Denom,
+		Amount: res.Balance.Amount.String(),
+	})
+	return &api.GetSystemBalanceResponse{
+		Balances: balances,
+	}, nil
+}
+
+func (b *BlockchainService) GetTotalSupply(req *api.GetTotalSupplyRequest) (*api.GetTotalSupplyResponse, error) {
+	out, err := b.chain.QueryGetTotalSupply(&bank.QueryTotalSupplyRequest{})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	balances := make([]*api.GetTotalSupplyResponse_Point, 0)
+	for i := 0; i < out.Supply.Len(); i++ {
+		denom := out.Supply.GetDenomByIndex(i)
+		if denom == COIN_STAKE {
+			continue
+		}
+		balances = append(balances, &api.GetTotalSupplyResponse_Point{
+			Denom:  denom,
+			Amount: out.Supply.AmountOf(denom).String(),
+		})
+	}
+	return &api.GetTotalSupplyResponse{
+		Balances: balances,
+	}, nil
 }
 
 func (b BlockchainService) CreateUser(req *api.PostUserRequest) (*api.PostUserResponse, error) {
-	if req.UserId == "" {
+	if req.Id == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
 	}
 	encryptedPrivateKey, err := b.chain.Encrypt(b.chain.GenPrivateKey(), b.key)
@@ -74,7 +108,7 @@ func (b BlockchainService) CreateUser(req *api.PostUserRequest) (*api.PostUserRe
 		return nil, xerrors.Errorf("%w", err)
 	}
 	user, err := b.db.CreateUser(&user.User{
-		UserID:              &req.UserId,
+		UserID:              &req.Id,
 		EncryptedPrivateKey: &encryptedPrivateKey,
 	})
 	if err != nil {
@@ -82,32 +116,12 @@ func (b BlockchainService) CreateUser(req *api.PostUserRequest) (*api.PostUserRe
 	}
 
 	return &api.PostUserResponse{
-		UserId: *user.UserID,
-	}, nil
-}
-
-func (b BlockchainService) InitSuperAdmin(req *api.PostSuperAdminRequest) (*api.PostSuperAdminResponse, error) {
-	if req.UserId == "" {
-		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
-	}
-	encryptedPrivateKey, err := b.chain.Encrypt(b.chain.GenPrivateKey(), b.key)
-	if err != nil {
-		return nil, xerrors.Errorf("%w", err)
-	}
-	user, err := b.db.CreateUser(&user.User{
-		UserID:              &req.UserId,
-		EncryptedPrivateKey: &encryptedPrivateKey,
-	})
-	if err != nil {
-		return nil, xerrors.Errorf("%w", err)
-	}
-	return &api.PostSuperAdminResponse{
-		UserId: *user.UserID,
+		Id: *user.UserID,
 	}, nil
 }
 
 func (b BlockchainService) Mint(req *api.PostMintRequest) (*api.PostMintResponse, error) {
-	if req.UserId == "" || req.Amount == "" {
+	if req.Id == "" || req.Amount == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
 	}
 	amount, err := strconv.ParseInt(req.Amount, 10, 64)
@@ -115,7 +129,7 @@ func (b BlockchainService) Mint(req *api.PostMintRequest) (*api.PostMintResponse
 		return nil, xerrors.Errorf("%w", e.ErrAmountInvalid)
 	}
 	user, err := b.db.GetUser(&user.SearchUser{
-		User: user.User{UserID: &req.UserId},
+		User: user.User{UserID: &req.Id},
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("%w", err)
@@ -132,14 +146,14 @@ func (b BlockchainService) Mint(req *api.PostMintRequest) (*api.PostMintResponse
 		return nil, xerrors.Errorf("%w", err)
 	}
 	return &api.PostMintResponse{
-		UserId: *user.UserID,
+		Id:     *user.UserID,
 		Amount: req.Amount,
 		Txh:    tx.TxResponse.TxHash,
 	}, nil
 }
 
 func (b BlockchainService) Burn(req *api.PostBurnRequest) (*api.PostBurnResponse, error) {
-	if req.UserId == "" || req.Amount == "" {
+	if req.Id == "" || req.Amount == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
 	}
 	amount, err := strconv.ParseInt(req.Amount, 10, 64)
@@ -147,7 +161,7 @@ func (b BlockchainService) Burn(req *api.PostBurnRequest) (*api.PostBurnResponse
 		return nil, xerrors.Errorf("%w", e.ErrAmountInvalid)
 	}
 	user, err := b.db.GetUser(&user.SearchUser{
-		User: user.User{UserID: &req.UserId},
+		User: user.User{UserID: &req.Id},
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("%w", err)
@@ -164,14 +178,14 @@ func (b BlockchainService) Burn(req *api.PostBurnRequest) (*api.PostBurnResponse
 		return nil, xerrors.Errorf("%w", err)
 	}
 	return &api.PostBurnResponse{
-		UserId: *user.UserID,
+		Id:     *user.UserID,
 		Amount: req.Amount,
 		Txh:    tx.TxResponse.TxHash,
 	}, nil
 }
 
 func (b BlockchainService) Transfer(req *api.PostTransferRequest) (*api.PostTransferResponse, error) {
-	if req.UserId == "" || req.Amount == "" || req.To == "" || req.Denom == "" {
+	if req.Id == "" || req.Amount == "" || req.To == "" || req.Denom == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
 	}
 	amount, err := strconv.ParseInt(req.Amount, 10, 64)
@@ -179,7 +193,7 @@ func (b BlockchainService) Transfer(req *api.PostTransferRequest) (*api.PostTran
 		return nil, xerrors.Errorf("%w", e.ErrAmountInvalid)
 	}
 	fromUser, err := b.db.GetUser(&user.SearchUser{
-		User: user.User{UserID: &req.UserId},
+		User: user.User{UserID: &req.Id},
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("%w", err)
@@ -208,7 +222,7 @@ func (b BlockchainService) Transfer(req *api.PostTransferRequest) (*api.PostTran
 		return nil, xerrors.Errorf("%w", err)
 	}
 	return &api.PostTransferResponse{
-		UserId: *fromUser.UserID,
+		Id:     *fromUser.UserID,
 		To:     *toUser.UserID,
 		Amount: req.Amount,
 		Denom:  req.Denom,
@@ -216,8 +230,46 @@ func (b BlockchainService) Transfer(req *api.PostTransferRequest) (*api.PostTran
 	}, nil
 }
 
+func (b BlockchainService) UpdateSuperAdmin(req *api.PutSuperAdminRequest) (*api.PutSuperAdminResponse, error) {
+	if req.Id == "" || req.AdminId == "" {
+		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
+	}
+	fromUser, err := b.db.GetUser(&user.SearchUser{
+		User: user.User{UserID: &req.Id},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	fromPrivateKey, err := b.chain.Decrypt(*fromUser.EncryptedPrivateKey, b.key)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+
+	toUser, err := b.db.GetUser(&user.SearchUser{
+		User: user.User{UserID: &req.AdminId},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	toPrivateKey, err := b.chain.Decrypt(*toUser.EncryptedPrivateKey, b.key)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	tx, err := b.chain.TxUpdateSuperAdmin(fromPrivateKey, &types.MsgUpdateSuperAdmin{
+		Creator: b.chain.GetAddress(fromPrivateKey),
+		Address: b.chain.GetAddress(toPrivateKey),
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	return &api.PutSuperAdminResponse{
+		Id:      *fromUser.UserID,
+		AdminId: *toUser.UserID,
+		Txh:     tx.TxResponse.TxHash,
+	}, nil
+}
 func (b BlockchainService) AdminTransfer(req *api.PostAdminTransferRequest) (*api.PostAdminTransferResponse, error) {
-	if req.UserId == "" || req.Amount == "" || req.To == "" || req.Denom == "" {
+	if req.Id == "" || req.Amount == "" || req.To == "" || req.Denom == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
 	}
 	if req.Denom != types.Denom {
@@ -228,7 +280,7 @@ func (b BlockchainService) AdminTransfer(req *api.PostAdminTransferRequest) (*ap
 		return nil, xerrors.Errorf("%w", e.ErrAmountInvalid)
 	}
 	fromUser, err := b.db.GetUser(&user.SearchUser{
-		User: user.User{UserID: &req.UserId},
+		User: user.User{UserID: &req.Id},
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("%w", err)
@@ -257,7 +309,7 @@ func (b BlockchainService) AdminTransfer(req *api.PostAdminTransferRequest) (*ap
 		return nil, xerrors.Errorf("%w", err)
 	}
 	return &api.PostAdminTransferResponse{
-		UserId: *fromUser.UserID,
+		Id:     *fromUser.UserID,
 		To:     *toUser.UserID,
 		Amount: req.Amount,
 		Denom:  req.Denom,
@@ -266,11 +318,11 @@ func (b BlockchainService) AdminTransfer(req *api.PostAdminTransferRequest) (*ap
 }
 
 func (b BlockchainService) AddAdmin(req *api.PostAdminRequest) (*api.PostAdminResponse, error) {
-	if req.UserId == "" || req.AdminId == "" {
+	if req.Id == "" || req.AdminId == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
 	}
 	fromUser, err := b.db.GetUser(&user.SearchUser{
-		User: user.User{UserID: &req.UserId},
+		User: user.User{UserID: &req.Id},
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("%w", err)
@@ -300,18 +352,18 @@ func (b BlockchainService) AddAdmin(req *api.PostAdminRequest) (*api.PostAdminRe
 		return nil, xerrors.Errorf("%w", err)
 	}
 	return &api.PostAdminResponse{
-		UserId:  *fromUser.UserID,
+		Id:      *fromUser.UserID,
 		AdminId: *newAdmin.UserID,
 		Txh:     tx.TxResponse.TxHash,
 	}, nil
 }
 
 func (b BlockchainService) DeleteAdmin(req *api.DeleteAdminRequest) (*api.DeleteAdminResponse, error) {
-	if req.UserId == "" || req.AdminId == "" {
+	if req.Id == "" || req.AdminId == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
 	}
 	fromUser, err := b.db.GetUser(&user.SearchUser{
-		User: user.User{UserID: &req.UserId},
+		User: user.User{UserID: &req.Id},
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("%w", err)
@@ -339,7 +391,7 @@ func (b BlockchainService) DeleteAdmin(req *api.DeleteAdminRequest) (*api.Delete
 		return nil, xerrors.Errorf("%w", err)
 	}
 	return &api.DeleteAdminResponse{
-		UserId:  *fromUser.UserID,
+		Id:      *fromUser.UserID,
 		AdminId: *toUser.UserID,
 		Txh:     tx.TxResponse.TxHash,
 	}, nil

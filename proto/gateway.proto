@@ -7,13 +7,6 @@ option go_package = "./api";
 
 service Gateway {
 
-    // Get admin
-    rpc GetAdmin(GetAdminRequest) returns (GetAdminResponse) {
-        option (google.api.http) = {
-            get: "/medicalpoint/admins"
-        };
-    }
-
     // Create User
     rpc PostUser(PostUserRequest) returns (PostUserResponse) {
         option (google.api.http) = {
@@ -26,13 +19,6 @@ service Gateway {
     rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {
     option (google.api.http) = {
         get: "/medicalpoint/balance"
-        };
-    }
-
-    // Init Super admin
-    rpc PostSuperAdmin(PostSuperAdminRequest) returns (PostSuperAdminResponse) {
-        option (google.api.http) = {
-            post: "/medicalpoint/super-admin"
         };
     }
 
@@ -90,7 +76,47 @@ service Gateway {
             get: "/medicalpoint/system-balance"
         };
     }
+    // Get total supply in system
+    rpc GetTotalSupply(GetTotalSupplyRequest) returns (GetTotalSupplyResponse) {
+        option (google.api.http) = {
+            get: "/medicalpoint/total-supply"
+        };
+    }
+    // Update super-admin to another user 
+    rpc PutSuperAdmin(PutSuperAdminRequest) returns (PutSuperAdminResponse) {
+        option (google.api.http) = {
+            put: "/medicalpoint/super-admin"
+            body: "*"
+        };
+    }
     
+}
+message PutSuperAdminRequest {
+    // id of current superadmin in main server
+    string id = 1;
+    // id of new admin to update, must existed in system
+    string adminId = 2;
+}
+
+message PutSuperAdminResponse {
+    string id = 1;
+    string adminId = 2;
+    // txh of transaction transfer-super-admin
+    string txh = 3;
+}
+
+message GetTotalSupplyRequest {
+}
+
+message GetTotalSupplyResponse {
+    // list of balances
+    repeated Point balances = 1;
+    message Point {
+        // denom name of token
+        string denom = 1;
+        // amount of token
+        string amount = 2;
+    }
 }
 
 message GetSystemBalanceRequest {
@@ -108,28 +134,28 @@ message GetSystemBalanceResponse {
 }
 
 message DeleteAdminRequest {
-    //userId of superadmin in main server
-    string userId = 1;
+    //id of superadmin in main server
+    string id = 1;
     //adminId of admin to delete
     string adminId = 2;
 }
 
 message DeleteAdminResponse {
-    string userId = 1;
+    string id = 1;
     string adminId = 2;
     // txh of transaction delete-admin
     string txh = 3;
 }
 
 message PostAdminRequest {
-    //userId of superadmin in main server
-    string userId = 1;
+    //id of superadmin in main server
+    string id = 1;
     //adminId of admin to add
     string adminId = 2;
 }
 
 message PostAdminResponse {
-    string userId = 1;
+    string id = 1;
     string adminId = 2;
     // txh of transaction create-admin
     string txh = 3;
@@ -137,28 +163,18 @@ message PostAdminResponse {
 
 
 message PostUserRequest {
-    //userId in main server
-    string userId = 1;
+    //id in main server
+    string id = 1;
 }
 
 message PostUserResponse {
-    //userId in main server
-    string userId = 1;
+    string id = 1;
 }
 
-
-message GetAdminRequest {
-
-}
-
-
-message GetAdminResponse {
-
-}
 
 message GetBalanceRequest {
-    //userId of user in main server that want to check balance
-    string userId = 1;
+    //id of user in main server that want to check balance
+    string id = 1;
 }
 
 
@@ -173,26 +189,17 @@ message GetBalanceResponse {
     }
 }
 
-message PostSuperAdminRequest {
-    // userId of user in main server that want to be super admin
-    string userId = 1;
-}
-
-
-message PostSuperAdminResponse {
-    string userId = 2;
-}
 
 message PostMintRequest {
     // amount of token to mint
     string amount = 1;
-    // userId of superadmin in main server 
-    string userId = 2;
+    // id of superadmin in main server 
+    string id = 2;
 }
 
 
 message PostMintResponse {
-    string userId = 1;
+    string id = 1;
     // amount of token has been minted
     string amount = 2;
     // txh of transaction mint
@@ -200,14 +207,14 @@ message PostMintResponse {
 }
 
 message PostBurnRequest {
-    // userId of superadmin in main server 
-    string userId = 1;
+    // id of superadmin in main server 
+    string id = 1;
     // amount of token to burn
     string amount = 2;
 }
 
 message PostBurnResponse {
-    string userId = 1;
+    string id = 1;
     // amount of token has been burned
     string amount = 2;
     // txh of transaction burn
@@ -215,9 +222,9 @@ message PostBurnResponse {
 }
 
 message PostTransferRequest {
-    // userId of sender user in main server 
-    string userId = 1;
-    // userId of reciever user in main server 
+    // id of sender user in main server 
+    string id = 1;
+    // id of reciever user in main server 
     string to = 2;
     // amount of token to transfer
     string amount = 3;
@@ -226,7 +233,7 @@ message PostTransferRequest {
 }
 
 message PostTransferResponse {
-    string userId = 1;
+    string id = 1;
     string to = 2;
     // amount of token has been transfered
     string amount = 3;
@@ -236,9 +243,9 @@ message PostTransferResponse {
 }
 
 message PostAdminTransferRequest {
-    // userId of sender admin in main server 
-    string userId = 1;
-    // userId of reciever user in main server 
+    // id of admin in main server 
+    string id = 1;
+    // id of reciever user in main server 
     string to = 2;
     // amount of token to transfer
     string amount = 3;
@@ -247,7 +254,7 @@ message PostAdminTransferRequest {
 }
 
 message PostAdminTransferResponse {
-    string userId = 1;
+    string id = 1;
     string to = 2;
     // amount of token has been transfered
     string amount = 3;

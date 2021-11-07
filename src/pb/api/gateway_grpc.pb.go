@@ -18,14 +18,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GatewayClient interface {
-	// Get admin
-	GetAdmin(ctx context.Context, in *GetAdminRequest, opts ...grpc.CallOption) (*GetAdminResponse, error)
 	// Create User
 	PostUser(ctx context.Context, in *PostUserRequest, opts ...grpc.CallOption) (*PostUserResponse, error)
 	// Get Balance
 	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
-	// Init Super admin
-	PostSuperAdmin(ctx context.Context, in *PostSuperAdminRequest, opts ...grpc.CallOption) (*PostSuperAdminResponse, error)
 	// Mint point
 	PostMint(ctx context.Context, in *PostMintRequest, opts ...grpc.CallOption) (*PostMintResponse, error)
 	// Burn point
@@ -40,6 +36,10 @@ type GatewayClient interface {
 	DeleteAdmin(ctx context.Context, in *DeleteAdminRequest, opts ...grpc.CallOption) (*DeleteAdminResponse, error)
 	// Get system balances
 	GetSystemBalance(ctx context.Context, in *GetSystemBalanceRequest, opts ...grpc.CallOption) (*GetSystemBalanceResponse, error)
+	// Get total supply in system
+	GetTotalSupply(ctx context.Context, in *GetTotalSupplyRequest, opts ...grpc.CallOption) (*GetTotalSupplyResponse, error)
+	// Update super-admin to another user
+	PutSuperAdmin(ctx context.Context, in *PutSuperAdminRequest, opts ...grpc.CallOption) (*PutSuperAdminResponse, error)
 }
 
 type gatewayClient struct {
@@ -48,15 +48,6 @@ type gatewayClient struct {
 
 func NewGatewayClient(cc grpc.ClientConnInterface) GatewayClient {
 	return &gatewayClient{cc}
-}
-
-func (c *gatewayClient) GetAdmin(ctx context.Context, in *GetAdminRequest, opts ...grpc.CallOption) (*GetAdminResponse, error) {
-	out := new(GetAdminResponse)
-	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/GetAdmin", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *gatewayClient) PostUser(ctx context.Context, in *PostUserRequest, opts ...grpc.CallOption) (*PostUserResponse, error) {
@@ -71,15 +62,6 @@ func (c *gatewayClient) PostUser(ctx context.Context, in *PostUserRequest, opts 
 func (c *gatewayClient) GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error) {
 	out := new(GetBalanceResponse)
 	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/GetBalance", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *gatewayClient) PostSuperAdmin(ctx context.Context, in *PostSuperAdminRequest, opts ...grpc.CallOption) (*PostSuperAdminResponse, error) {
-	out := new(PostSuperAdminResponse)
-	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/PostSuperAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -149,18 +131,32 @@ func (c *gatewayClient) GetSystemBalance(ctx context.Context, in *GetSystemBalan
 	return out, nil
 }
 
+func (c *gatewayClient) GetTotalSupply(ctx context.Context, in *GetTotalSupplyRequest, opts ...grpc.CallOption) (*GetTotalSupplyResponse, error) {
+	out := new(GetTotalSupplyResponse)
+	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/GetTotalSupply", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) PutSuperAdmin(ctx context.Context, in *PutSuperAdminRequest, opts ...grpc.CallOption) (*PutSuperAdminResponse, error) {
+	out := new(PutSuperAdminResponse)
+	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/PutSuperAdmin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GatewayServer is the server API for Gateway service.
 // All implementations must embed UnimplementedGatewayServer
 // for forward compatibility
 type GatewayServer interface {
-	// Get admin
-	GetAdmin(context.Context, *GetAdminRequest) (*GetAdminResponse, error)
 	// Create User
 	PostUser(context.Context, *PostUserRequest) (*PostUserResponse, error)
 	// Get Balance
 	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
-	// Init Super admin
-	PostSuperAdmin(context.Context, *PostSuperAdminRequest) (*PostSuperAdminResponse, error)
 	// Mint point
 	PostMint(context.Context, *PostMintRequest) (*PostMintResponse, error)
 	// Burn point
@@ -175,6 +171,10 @@ type GatewayServer interface {
 	DeleteAdmin(context.Context, *DeleteAdminRequest) (*DeleteAdminResponse, error)
 	// Get system balances
 	GetSystemBalance(context.Context, *GetSystemBalanceRequest) (*GetSystemBalanceResponse, error)
+	// Get total supply in system
+	GetTotalSupply(context.Context, *GetTotalSupplyRequest) (*GetTotalSupplyResponse, error)
+	// Update super-admin to another user
+	PutSuperAdmin(context.Context, *PutSuperAdminRequest) (*PutSuperAdminResponse, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -182,17 +182,11 @@ type GatewayServer interface {
 type UnimplementedGatewayServer struct {
 }
 
-func (UnimplementedGatewayServer) GetAdmin(context.Context, *GetAdminRequest) (*GetAdminResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAdmin not implemented")
-}
 func (UnimplementedGatewayServer) PostUser(context.Context, *PostUserRequest) (*PostUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostUser not implemented")
 }
 func (UnimplementedGatewayServer) GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBalance not implemented")
-}
-func (UnimplementedGatewayServer) PostSuperAdmin(context.Context, *PostSuperAdminRequest) (*PostSuperAdminResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PostSuperAdmin not implemented")
 }
 func (UnimplementedGatewayServer) PostMint(context.Context, *PostMintRequest) (*PostMintResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostMint not implemented")
@@ -215,6 +209,12 @@ func (UnimplementedGatewayServer) DeleteAdmin(context.Context, *DeleteAdminReque
 func (UnimplementedGatewayServer) GetSystemBalance(context.Context, *GetSystemBalanceRequest) (*GetSystemBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSystemBalance not implemented")
 }
+func (UnimplementedGatewayServer) GetTotalSupply(context.Context, *GetTotalSupplyRequest) (*GetTotalSupplyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTotalSupply not implemented")
+}
+func (UnimplementedGatewayServer) PutSuperAdmin(context.Context, *PutSuperAdminRequest) (*PutSuperAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PutSuperAdmin not implemented")
+}
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
 // UnsafeGatewayServer may be embedded to opt out of forward compatibility for this service.
@@ -226,24 +226,6 @@ type UnsafeGatewayServer interface {
 
 func RegisterGatewayServer(s grpc.ServiceRegistrar, srv GatewayServer) {
 	s.RegisterService(&Gateway_ServiceDesc, srv)
-}
-
-func _Gateway_GetAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAdminRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GatewayServer).GetAdmin(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/medical_chain.Gateway/GetAdmin",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServer).GetAdmin(ctx, req.(*GetAdminRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Gateway_PostUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -278,24 +260,6 @@ func _Gateway_GetBalance_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GatewayServer).GetBalance(ctx, req.(*GetBalanceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Gateway_PostSuperAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PostSuperAdminRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GatewayServer).PostSuperAdmin(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/medical_chain.Gateway/PostSuperAdmin",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServer).PostSuperAdmin(ctx, req.(*PostSuperAdminRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -426,6 +390,42 @@ func _Gateway_GetSystemBalance_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_GetTotalSupply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTotalSupplyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).GetTotalSupply(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/medical_chain.Gateway/GetTotalSupply",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).GetTotalSupply(ctx, req.(*GetTotalSupplyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_PutSuperAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutSuperAdminRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).PutSuperAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/medical_chain.Gateway/PutSuperAdmin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).PutSuperAdmin(ctx, req.(*PutSuperAdminRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Gateway_ServiceDesc is the grpc.ServiceDesc for Gateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -434,20 +434,12 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*GatewayServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetAdmin",
-			Handler:    _Gateway_GetAdmin_Handler,
-		},
-		{
 			MethodName: "PostUser",
 			Handler:    _Gateway_PostUser_Handler,
 		},
 		{
 			MethodName: "GetBalance",
 			Handler:    _Gateway_GetBalance_Handler,
-		},
-		{
-			MethodName: "PostSuperAdmin",
-			Handler:    _Gateway_PostSuperAdmin_Handler,
 		},
 		{
 			MethodName: "PostMint",
@@ -476,6 +468,14 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSystemBalance",
 			Handler:    _Gateway_GetSystemBalance_Handler,
+		},
+		{
+			MethodName: "GetTotalSupply",
+			Handler:    _Gateway_GetTotalSupply_Handler,
+		},
+		{
+			MethodName: "PutSuperAdmin",
+			Handler:    _Gateway_PutSuperAdmin_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

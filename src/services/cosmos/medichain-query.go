@@ -17,8 +17,29 @@ type MedichainQuery interface {
 	QueryGetAdmin(req *types.QueryGetAdminRequest) (*types.QueryGetAdminResponse, error)
 	QueryGetSuperAdmin(req *types.QueryGetSuperAdminRequest) (*types.QueryGetSuperAdminResponse, error)
 	QueryGetAllBalance(req *types3.QueryAllBalancesRequest) (*types3.QueryAllBalancesResponse, error)
+	QueryGetSystemBalance(req *types.QuerySystemBalanceRequest) (*types.QuerySystemBalanceResponse, error)
+	QueryGetTotalSupply(req *types3.QueryTotalSupplyRequest) (*types3.QueryTotalSupplyResponse, error)
 }
 
+func (s *CosmosServiceClient) QueryGetTotalSupply(req *types3.QueryTotalSupplyRequest) (*types3.QueryTotalSupplyResponse, error) {
+	res, err := s.bankClient.TotalSupply(s.ctx, req)
+
+	if err != nil {
+		message := status.Convert(err).Message()
+		return nil, xerrors.New(message)
+	}
+	return res, nil
+}
+
+func (s *CosmosServiceClient) QueryGetSystemBalance(req *types.QuerySystemBalanceRequest) (*types.QuerySystemBalanceResponse, error) {
+	res, err := s.queryClient.SystemBalance(s.ctx, req)
+
+	if err != nil {
+		message := status.Convert(err).Message()
+		return nil, xerrors.New(message)
+	}
+	return res, nil
+}
 func (s *CosmosServiceClient) QueryGetAllBalance(req *types3.QueryAllBalancesRequest) (*types3.QueryAllBalancesResponse, error) {
 	res, err := s.bankClient.AllBalances(s.ctx, req)
 
