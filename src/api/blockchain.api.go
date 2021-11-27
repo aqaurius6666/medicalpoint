@@ -69,6 +69,21 @@ func (b *BlockchainApi) HandleBurnPost(g *gin.Context) {
 	lib.Success(g, res)
 }
 
+func (b *BlockchainApi) HandleSendSystemPost(g *gin.Context) {
+	req := &api.PostSendSystemRequest{}
+	err := g.BindJSON(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	res, err := b.service.SendSystem(req)
+	if err != nil {
+		lib.ErrBadRequest(g, err)
+		return
+	}
+	lib.Success(g, res)
+}
+
 func (b *BlockchainApi) HandleTransferPost(g *gin.Context) {
 	req := &api.PostTransferRequest{}
 	err := g.BindJSON(req)

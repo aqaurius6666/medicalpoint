@@ -23,6 +23,7 @@ type MedichainTx interface {
 	TxMint(priv []byte, req *types.MsgMint) (*txtypes.BroadcastTxResponse, error)
 	TxUpdateSuperAdmin(priv []byte, req *types.MsgUpdateSuperAdmin) (*txtypes.BroadcastTxResponse, error)
 	TxTransfer(priv []byte, req *types3.MsgSend) (*txtypes.BroadcastTxResponse, error)
+	TxSendToSystem(priv []byte, req *types.MsgSendToSystem) (*txtypes.BroadcastTxResponse, error)
 }
 
 func (s *CosmosServiceClient) TxTransfer(priv []byte, req *types3.MsgSend) (*txtypes.BroadcastTxResponse, error) {
@@ -110,6 +111,18 @@ func (s *CosmosServiceClient) TxAdminTransfer(priv []byte, req *types.MsgAdminTr
 		message := status.Convert(err).Message()
 		return nil, xerrors.New(message)
 	}
-	
+
+	return res, nil
+}
+
+func (s *CosmosServiceClient) TxSendToSystem(priv []byte, req *types.MsgSendToSystem) (*txtypes.BroadcastTxResponse, error) {
+	privs := []types2.PrivKey{&secp256k1.PrivKey{Key: priv}}
+
+	res, err := s.sendTx(req, privs)
+	if err != nil {
+		message := status.Convert(err).Message()
+		return nil, xerrors.New(message)
+	}
+
 	return res, nil
 }

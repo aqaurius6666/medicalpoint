@@ -89,8 +89,31 @@ service Gateway {
             body: "*"
         };
     }
+
+    // Send point to system
+    rpc PostSendSystem(PostSendSystemRequest) returns (PostSendSystemResponse) {
+        option (google.api.http) = {
+            post: "/medicalpoint/send-system"
+            body: "*"
+        };
+    }
     
 }
+message PostSendSystemRequest {
+    // id of sender user in main server 
+    string id = 1;
+    // amount of token to transfer
+    string amount = 2;
+}
+
+message PostSendSystemResponse {
+    string id = 1;
+    string amount = 2;
+    // txh of transaction send-to-system
+    string txh = 3;
+}
+
+
 message PutSuperAdminRequest {
     // id of current superadmin in main server
     string id = 1;

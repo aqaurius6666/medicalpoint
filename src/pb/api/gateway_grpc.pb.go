@@ -40,6 +40,8 @@ type GatewayClient interface {
 	GetTotalSupply(ctx context.Context, in *GetTotalSupplyRequest, opts ...grpc.CallOption) (*GetTotalSupplyResponse, error)
 	// Update super-admin to another user
 	PutSuperAdmin(ctx context.Context, in *PutSuperAdminRequest, opts ...grpc.CallOption) (*PutSuperAdminResponse, error)
+	// Send point to system
+	PostSendSystem(ctx context.Context, in *PostSendSystemRequest, opts ...grpc.CallOption) (*PostSendSystemResponse, error)
 }
 
 type gatewayClient struct {
@@ -149,6 +151,15 @@ func (c *gatewayClient) PutSuperAdmin(ctx context.Context, in *PutSuperAdminRequ
 	return out, nil
 }
 
+func (c *gatewayClient) PostSendSystem(ctx context.Context, in *PostSendSystemRequest, opts ...grpc.CallOption) (*PostSendSystemResponse, error) {
+	out := new(PostSendSystemResponse)
+	err := c.cc.Invoke(ctx, "/medical_chain.Gateway/PostSendSystem", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GatewayServer is the server API for Gateway service.
 // All implementations must embed UnimplementedGatewayServer
 // for forward compatibility
@@ -175,6 +186,8 @@ type GatewayServer interface {
 	GetTotalSupply(context.Context, *GetTotalSupplyRequest) (*GetTotalSupplyResponse, error)
 	// Update super-admin to another user
 	PutSuperAdmin(context.Context, *PutSuperAdminRequest) (*PutSuperAdminResponse, error)
+	// Send point to system
+	PostSendSystem(context.Context, *PostSendSystemRequest) (*PostSendSystemResponse, error)
 	mustEmbedUnimplementedGatewayServer()
 }
 
@@ -214,6 +227,9 @@ func (UnimplementedGatewayServer) GetTotalSupply(context.Context, *GetTotalSuppl
 }
 func (UnimplementedGatewayServer) PutSuperAdmin(context.Context, *PutSuperAdminRequest) (*PutSuperAdminResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PutSuperAdmin not implemented")
+}
+func (UnimplementedGatewayServer) PostSendSystem(context.Context, *PostSendSystemRequest) (*PostSendSystemResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostSendSystem not implemented")
 }
 func (UnimplementedGatewayServer) mustEmbedUnimplementedGatewayServer() {}
 
@@ -426,6 +442,24 @@ func _Gateway_PutSuperAdmin_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Gateway_PostSendSystem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostSendSystemRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).PostSendSystem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/medical_chain.Gateway/PostSendSystem",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).PostSendSystem(ctx, req.(*PostSendSystemRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Gateway_ServiceDesc is the grpc.ServiceDesc for Gateway service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -476,6 +510,10 @@ var Gateway_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PutSuperAdmin",
 			Handler:    _Gateway_PutSuperAdmin_Handler,
+		},
+		{
+			MethodName: "PostSendSystem",
+			Handler:    _Gateway_PostSendSystem_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

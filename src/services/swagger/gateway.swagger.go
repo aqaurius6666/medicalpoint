@@ -214,6 +214,39 @@ var GATEWAY_JSON = `{
         ]
       }
     },
+    "/medicalpoint/send-system": {
+      "post": {
+        "summary": "Send point to system",
+        "operationId": "Gateway_PostSendSystem",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/medical_chainPostSendSystemResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/medical_chainPostSendSystemRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Gateway"
+        ]
+      }
+    },
     "/medicalpoint/super-admin": {
       "put": {
         "summary": "Update super-admin to another user",
@@ -590,6 +623,34 @@ var GATEWAY_JSON = `{
         "txh": {
           "type": "string",
           "title": "txh of transaction mint"
+        }
+      }
+    },
+    "medical_chainPostSendSystemRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "id of sender user in main server"
+        },
+        "amount": {
+          "type": "string",
+          "title": "amount of token to transfer"
+        }
+      }
+    },
+    "medical_chainPostSendSystemResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "string"
+        },
+        "txh": {
+          "type": "string",
+          "title": "txh of transaction send-to-system"
         }
       }
     },

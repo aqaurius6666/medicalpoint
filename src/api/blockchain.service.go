@@ -230,6 +230,38 @@ func (b BlockchainService) Transfer(req *api.PostTransferRequest) (*api.PostTran
 	}, nil
 }
 
+func (b BlockchainService) SendSystem(req *api.PostSendSystemRequest) (*api.PostSendSystemResponse, error) {
+	if req.Id == "" || req.Amount == "" {
+		return nil, xerrors.Errorf("%w", e.ErrMissingFields)
+	}
+	amount, err := strconv.ParseInt(req.Amount, 10, 64)
+	if err != nil || amount < 0 {
+		return nil, xerrors.Errorf("%w", e.ErrAmountInvalid)
+	}
+	fromUser, err := b.db.GetUser(&user.SearchUser{
+		User: user.User{UserID: &req.Id},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	fromPrivateKey, err := b.chain.Decrypt(*fromUser.EncryptedPrivateKey, b.key)
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	tx, err := b.chain.TxSendToSystem(fromPrivateKey, &types.MsgSendToSystem{
+		Creator: b.chain.GetAddress(fromPrivateKey),
+		Amount:  uint64(amount),
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("%w", err)
+	}
+	return &api.PostSendSystemResponse{
+		Id:     req.Id,
+		Amount: req.Amount,
+		Txh:    tx.TxResponse.TxHash,
+	}, nil
+}
+
 func (b BlockchainService) UpdateSuperAdmin(req *api.PutSuperAdminRequest) (*api.PutSuperAdminResponse, error) {
 	if req.Id == "" || req.AdminId == "" {
 		return nil, xerrors.Errorf("%w", e.ErrMissingFields)

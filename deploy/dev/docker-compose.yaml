@@ -4,9 +4,10 @@ networks:
     name: medicalpoint-gateway
 services:
   chain:
-    build:
-      dockerfile: chain.Dockerfile
-      context: ../..
+    image: aqaurius6666/medicalpoint:latest
+    # build:
+    #   dockerfile: chain.Dockerfile
+    #   context: ../..
     command:
       - /bin/sh
       - -c

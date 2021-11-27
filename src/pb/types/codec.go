@@ -15,6 +15,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgMint{}, "medipoint/Mint", nil)
 	cdc.RegisterConcrete(&MsgBurn{}, "medipoint/Burn", nil)
 	cdc.RegisterConcrete(&MsgAdminTransfer{}, "medipoint/AdminTransfer", nil)
+	cdc.RegisterConcrete(&MsgSendToSystem{}, "medipoint/SendToSystem", nil)
 	// this line is used by starport scaffolding # 2
 }
 
@@ -35,6 +36,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAdminTransfer{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgSendToSystem{},
 	)
 	// this line is used by starport scaffolding # 3
 

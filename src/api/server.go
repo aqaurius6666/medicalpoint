@@ -35,4 +35,5 @@ func (s *GateWayServer) RegisterEndpoint() {
 	medicalpoint.DELETE("/admin", s.blockchain.HandleAdminDelete)
 	medicalpoint.GET("/system-balance", s.blockchain.HandleSystemBalanceGet)
 	medicalpoint.GET("/total-supply", s.blockchain.HandleTotalSupplyGet)
+	medicalpoint.POST("/send-system", s.blockchain.HandleSendSystemPost)
 }
