@@ -1,17 +1,21 @@
 version: "3.7"
 services:
   chain:
-    image: aqaurius6666/medicalpoint:latest
+    image: aqaurius6666/medipoint-chain:latest
+    # build: 
+    #   dockerfile: chain.Dockerfile
+    #   context: .
     ports:
       - "9191:9090"
       - "26657:26657"
+    user: root
     command:
       - /bin/sh
       - -c
       - |
-        rm -Rf ~/.medipoint
-        sleep 2
         ./init-chain.sh
+    volumes:
+      - .chain:/root/.medipoint
     environment:
       - MONIKER=medicalpoint
       - CHAIN_ID=test-chain
@@ -25,7 +29,7 @@ services:
       - "26259:26257"
     command: start-single-node --insecure
     volumes:
-      - "../../.db:/cockroach/cockroach-data"
+      - "./.db:/cockroach/cockroach-data"
 
   gateway:
     image: aqaurius6666/medicalpoint-gateway:latest
@@ -55,4 +59,6 @@ services:
       - CHAIN_ID=test-chain
       - GCFLAGS
       - ENCRYPT_KEY=31237147183974198324719247184
- 
+
+volumes:
+  .chain:

@@ -5,3 +5,5 @@ tmp
 .dockerignore
 .gitignore
 .env
+.chain
+.db

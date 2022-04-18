@@ -182,3 +182,5 @@ cockroach.values.yaml
 service.values.yaml
 .account.json
 assets
+
+.chain
